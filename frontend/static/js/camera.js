@@ -476,6 +476,9 @@ function predictAlphabetFromHand() {
         
         if (result) result.innerHTML = resultHTML;
         lastHandPrediction = data;
+        
+        // Save to history automatically
+        saveToHistory(consensus.label, consensus.confidence);
       } else if (confidence >= CONSENSUS_THRESHOLD) {
         console.log('⏳ Waiting for consensus... Current:', predictionHistory.map(p => p.label).join(', '));
         // Show waiting message
@@ -598,6 +601,51 @@ function stopCamera() {
   // Clear prediction history
   predictionHistory = [];
   console.log('🗑️ Prediction history cleared');
+}
+
+function saveToHistory(text, confidence) {
+  /**
+   * Save prediction to history via API
+   */
+  
+  // Don't save uncertain predictions
+  if (text === '?' || text === 'QUEUED' || !text) {
+    console.log('⏭️ Skipping save to history (uncertain prediction)');
+    return;
+  }
+  
+  console.log('💾 Saving to history:', text, `(${(confidence * 100).toFixed(1)}%)`);
+  
+  // Get JWT token
+  const headers = { 'Content-Type': 'application/json' };
+  const jwtToken = sessionStorage.getItem('jwt_access_token');
+  if (jwtToken) {
+    headers['Authorization'] = `Bearer ${jwtToken}`;
+  }
+  
+  // Save to history endpoint
+  fetch('/api/history/', {
+    method: 'POST',
+    headers: headers,
+    body: JSON.stringify({
+      translation: text,
+      confidence: confidence
+    }),
+    credentials: 'same-origin'
+  })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('✅ Saved to history successfully:', data);
+    })
+    .catch(err => {
+      console.warn('⚠️ Failed to save to history:', err.message);
+      // Don't show error to user - history save is background operation
+    });
 }
 
 function captureImage() {
@@ -751,6 +799,9 @@ function captureImage() {
           }
           
           result.innerHTML = resultHTML;
+          
+          // Save to history automatically
+          saveToHistory(mainText, confidence);
         }
       }
     })

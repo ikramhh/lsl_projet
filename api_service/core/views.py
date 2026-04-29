@@ -358,12 +358,19 @@ class HistoryView(View):
         if not user_id:
             user_id = authenticated_user.id
 
+        # Create history entry with translation text and confidence
         h = History.objects.create(
             user_id=user_id,
-            translation_id=data.get("translation_id")
+            translation=data.get("translation", ""),
+            confidence=data.get("confidence", 0.0)
         )
 
-        return JsonResponse({"id": h.id}, status=201)
+        return JsonResponse({
+            "id": h.id,
+            "translation": h.translation,
+            "confidence": h.confidence,
+            "created_at": h.created_at
+        }, status=201)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
