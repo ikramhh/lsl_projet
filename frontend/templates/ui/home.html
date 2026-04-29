@@ -1,0 +1,148 @@
+{% extends "ui/base.html" %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="hero">
+    <div class="hero-image-wrap">
+        <img src="/static/images/sign2.png" alt="SignVue AI Recognition">
+    </div>
+    <div class="hero-overlay"></div>
+    <div class="container hero-content">
+        <h1 class="hero-title">Translate Sign Language to <span>Text Instantly</span></h1>
+        <p class="hero-subtitle">Our AI-powered SignVue bridges communication gaps with real-time gesture recognition and seamless text conversion.</p>
+        <div class="hero-actions">
+            <a href="/auth/register/" class="btn btn-dark">Sign up &rarr;</a>
+            <a href="/auth/camera-redirect/" class="btn btn-light">Try Demo</a>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Carousel -->
+<section class="features">
+    <div class="container">
+        <div class="section-header">
+            <h2>How It Works</h2>
+            <p>Three simple steps to translate gestures into text</p>
+        </div>
+
+        <div class="carousel">
+            <div class="carousel-track" id="carousel-track">
+                <div class="carousel-slide">
+                    <div class="carousel-card">
+                        <div class="carousel-img-wrap">
+                            <img src="/static/images/sign7.png" alt="Camera Recognition">
+                        </div>
+                        <div class="carousel-dots">
+                            <span class="dot active"></span>
+                            <span class="dot"></span>
+                            <span class="dot"></span>
+                        </div>
+                        <h3>Camera Recognition</h3>
+                        <p>Enable your webcam and let our AI detect hand gestures in real time with high accuracy.</p>
+                        <div class="carousel-nav">
+                            <button type="button" class="carousel-skip" >Skip</button>
+                            <button type="button" class="carousel-next" >Next</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="carousel-slide">
+                    <div class="carousel-card">
+                        <div class="carousel-img-wrap">
+                            <img src="/static/images/sign1.png" alt="Gesture to Text">
+                        </div>
+                        <div class="carousel-dots">
+                            <span class="dot"></span>
+                            <span class="dot active"></span>
+                            <span class="dot"></span>
+                        </div>
+                        <h3>Gesture to Text</h3>
+                        <p>Advanced machine learning models convert LSL gestures into readable text instantly.</p>
+                        <div class="carousel-nav">
+                            <button type="button" class="carousel-skip" >Skip</button>
+                            <button type="button" class="carousel-next" >Next</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="carousel-slide">
+                    <div class="carousel-card">
+                        <div class="carousel-img-wrap">
+                            <img src="/static/images/sign6.png" alt="History Saved">
+                        </div>
+                        <div class="carousel-dots">
+                            <span class="dot"></span>
+                            <span class="dot"></span>
+                            <span class="dot active"></span>
+                        </div>
+                        <h3>History Saved</h3>
+                        <p>All your translations are securely stored so you can review and manage them anytime.</p>
+                        <div class="carousel-nav">
+                            <button type="button" class="carousel-skip">Skip</button>
+                            <a href="/auth/camera-redirect/" class="carousel-next">Start</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Prep Section -->
+<section class="container">
+    <div class="prep-section">
+        <div class="prep-image">
+            <img src="/static/images/sign8.jpg" alt="Ready to Sign?">
+        </div>
+        <div class="prep-content">
+            <span class="prep-badge">Preparation</span>
+            <h2>Ready to Sign?</h2>
+            <p class="prep-lead">Get ready to sign <strong>"Hello, World!"</strong></p>
+
+            <div class="prep-tips-list">
+                <div class="prep-tip-row">
+                    <div class="tip-check">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                    </div>
+                    <div>
+                        <h4>Distance</h4>
+                        <p>Stay within 0.5 meters from the camera for best recognition</p>
+                    </div>
+                </div>
+                <div class="prep-tip-row">
+                    <div class="tip-check">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                    </div>
+                    <div>
+                        <h4>Lighting</h4>
+                        <p>Avoid extreme lighting — use soft, even light</p>
+                    </div>
+                </div>
+                <div class="prep-tip-row">
+                    <div class="tip-check">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                    </div>
+                    <div>
+                        <h4>Gloves</h4>
+                        <p>Avoid bulky or colored gloves that may confuse the AI</p>
+                    </div>
+                </div>
+            </div>
+
+            <a href="/auth/camera-redirect/" class="btn btn-primary">Open Camera &rarr;</a>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Banner -->
+<section class="container">
+    <div class="cta-banner">
+        <h2>Ready to start translating?</h2>
+        <p>Create a free account and unlock the full potential of LSL communication.</p>
+        <a href="/auth/register/" class="btn" style="background:#fff; color:var(--primary);">Create Account</a>
+        <a href="/auth/login/" style="color:#fff; opacity:0.85; margin-left:16px; font-size:14px;">Already have an account? Log in</a>
+    </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Simple Predict Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #7c3aed;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #6d28d9;
+        }
+        #result {
+            background: #1e293b;
+            color: #10b981;
+            padding: 16px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            min-height: 100px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .loading {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Simple Predict Test</h1>
+    
+    <div class="box">
+        <h2>Test 1: Simple GET Request</h2>
+        <button onclick="testGet()">Test GET /api/predict/</button>
+        <div id="get-result"></div>
+    </div>
+
+    <div class="box">
+        <h2>Test 2: POST with Dummy Image</h2>
+        <button onclick="testPost()">Test POST /api/predict/</button>
+        <div id="post-result"></div>
+    </div>
+
+    <div class="box">
+        <h2>Console Output</h2>
+        <div id="result">Ready...</div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            const time = new Date().toLocaleTimeString();
+            resultDiv.innerHTML += `\n[${time}] ${message}`;
+            resultDiv.scrollTop = resultDiv.scrollHeight;
+            console.log(message);
+        }
+
+        async function testGet() {
+            const resultDiv = document.getElementById('get-result');
+            resultDiv.innerHTML = '<div class="status loading">⏳ Testing GET...</div>';
+            log('🔍 Testing GET /api/predict/');
+
+            try {
+                const start = Date.now();
+                log('📤 Sending GET request...');
+                
+                const response = await fetch('/api/predict/', {
+                    method: 'GET'
+                });
+
+                const duration = Date.now() - start;
+                log(`📥 Response received in ${duration}ms`);
+                log(`📊 Status: ${response.status}`);
+                log(`📊 OK: ${response.ok}`);
+                log(`📊 Type: ${response.type}`);
+
+                const text = await response.text();
+                log(`📄 Response length: ${text.length} bytes`);
+                log(`📄 Response preview: ${text.substring(0, 200)}`);
+
+                if (response.ok) {
+                    const data = JSON.parse(text);
+                    log('✅ GET successful!');
+                    resultDiv.innerHTML = `<div class="status success">✅ GET works! Status: ${response.status}</div>`;
+                } else {
+                    log('❌ GET failed');
+                    resultDiv.innerHTML = `<div class="status error">❌ GET failed: ${response.status}</div>`;
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`);
+                resultDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testPost() {
+            const resultDiv = document.getElementById('post-result');
+            resultDiv.innerHTML = '<div class="status loading">⏳ Testing POST...</div>';
+            log('\n🔍 Testing POST /api/predict/');
+
+            // Create a simple test image
+            const canvas = document.createElement('canvas');
+            canvas.width = 160;
+            canvas.height = 160;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, 160, 160);
+            
+            const imageData = canvas.toDataURL('image/jpeg', 0.9);
+            log(`📸 Created test image (${imageData.length} bytes)`);
+
+            try {
+                const start = Date.now();
+                log('📤 Sending POST request...');
+                log(`📍 URL: /api/predict/`);
+                
+                const response = await fetch('/api/predict/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ image: imageData })
+                });
+
+                const duration = Date.now() - start;
+                log(`📥 Response received in ${duration}ms`);
+                log(`📊 Status: ${response.status}`);
+                log(`📊 OK: ${response.ok}`);
+                log(`📊 Type: ${response.type}`);
+                log(`📊 URL: ${response.url}`);
+
+                // Get as text first
+                const text = await response.text();
+                log(`📄 Response length: ${text.length} bytes`);
+                log(`📄 Full response: ${text}`);
+
+                if (response.ok) {
+                    // Parse JSON
+                    try {
+                        const data = JSON.parse(text);
+                        log('✅ JSON parsed successfully!');
+                        log(`🎯 Prediction: ${data.text}`);
+                        log(`📊 Confidence: ${(data.confidence * 100).toFixed(2)}%`);
+                        log(`👤 User: ${data.user}`);
+                        
+                        resultDiv.innerHTML = `
+                            <div class="status success">
+                                ✅ POST successful!<br>
+                                <strong>Prediction:</strong> ${data.text}<br>
+                                <strong>Confidence:</strong> ${(data.confidence * 100).toFixed(2)}%<br>
+                                <strong>Time:</strong> ${duration}ms
+                            </div>
+                        `;
+                    } catch (parseError) {
+                        log(`❌ JSON parse error: ${parseError.message}`);
+                        resultDiv.innerHTML = `<div class="status error">❌ JSON parse error: ${parseError.message}</div>`;
+                    }
+                } else {
+                    log(`❌ POST failed with status ${response.status}`);
+                    resultDiv.innerHTML = `<div class="status error">❌ POST failed: ${response.status}<br>${text}</div>`;
+                }
+            } catch (error) {
+                log(`❌ Fetch error: ${error.message}`);
+                log(`❌ Error name: ${error.name}`);
+                log(`❌ Error stack: ${error.stack}`);
+                resultDiv.innerHTML = `<div class="status error">❌ Fetch Error: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-test on load
+        window.addEventListener('load', () => {
+            log('🚀 Test page loaded');
+            log('📝 Click buttons to test API endpoints');
+        });
+    </script>
+</body>
+</html>

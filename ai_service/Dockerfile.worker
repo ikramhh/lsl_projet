@@ -1,0 +1,28 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies (lighter than full AI service)
+RUN apt-get update && apt-get install -y \
+    gcc \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy worker-specific requirements (CPU-only PyTorch)
+COPY requirements-worker.txt .
+
+# Install Python dependencies (CPU-only, much smaller)
+RUN pip install --no-cache-dir -r requirements-worker.txt \
+    -f https://download.pytorch.org/whl/torch_stable.html
+
+# Copy project files
+COPY . .
+
+# Set environment variable to disable Python output buffering
+ENV PYTHONUNBUFFERED=1
+
+# Run the worker
+CMD ["python", "ai_worker.py"]

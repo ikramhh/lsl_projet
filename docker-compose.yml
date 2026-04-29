@@ -1,0 +1,179 @@
+services:
+  # ===========================================
+  # Consul - Service Discovery & Registry
+  # ===========================================
+  consul:
+    image: hashicorp/consul:1.17
+    container_name: lsl_consul
+    command: agent -dev -client=0.0.0.0
+    ports:
+      - "8500:8500"
+      - "8600:8600/udp"
+    networks:
+      - lsl_network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8500/v1/status/leader"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================
+  # Traefik - Reverse Proxy
+  # ===========================================
+  traefik:
+    image: traefik:v2.10
+    container_name: lsl_traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "8888:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - lsl_network
+
+  # ===========================================
+  # RabbitMQ - Message Broker
+  # ===========================================
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: lsl_rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    networks:
+      - lsl_network
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================
+  # Main Django Service - Everything in one
+  # ===========================================
+  django_app:
+    build:
+      context: ./api_service
+      dockerfile: Dockerfile
+    container_name: lsl_django
+    volumes:
+      - ./api_service:/app
+      - ./auth_service:/auth_service
+      - ./frontend:/frontend
+      - django_db_data:/app/data
+    environment:
+      - DJANGO_SETTINGS_MODULE=api_service.settings
+      - DATABASE_URL=sqlite:///data/db.sqlite3
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASS=guest
+      - ALLOWED_HOSTS=*
+      - CONSUL_HOST=consul
+      - CONSUL_PORT=8500
+      - CONSUL_SERVICE_NAME=django-api
+      - SERVICE_PORT=8000
+      - SERVICE_ADDRESS=lsl_django
+      - HEALTH_CHECK_URL=/auth/
+    networks:
+      - lsl_network
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      consul:
+        condition: service_healthy
+    command: >
+      sh -c "python register_consul.py &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.django.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.django.entrypoints=web"
+      - "traefik.http.routers.django.service=django"
+      - "traefik.http.services.django.loadbalancer.server.port=8000"
+
+  # ===========================================
+  # AI Service - ML Model & Prediction
+  # ===========================================
+  ai_service:
+    build:
+      context: ./ai_service
+      dockerfile: Dockerfile
+    container_name: lsl_ai
+    volumes:
+      - ./ai_service:/app
+      - ai_db_data:/app/data
+    environment:
+      - DJANGO_SETTINGS_MODULE=ai_service.settings
+      - DATABASE_URL=sqlite:///data/db.sqlite3
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASS=guest
+      - ALLOWED_HOSTS=*
+      - CONSUL_HOST=consul
+      - CONSUL_PORT=8500
+      - CONSUL_SERVICE_NAME=ai-service
+      - SERVICE_PORT=8002
+      - SERVICE_ADDRESS=lsl_ai
+      - HEALTH_CHECK_URL=/predict/
+    networks:
+      - lsl_network
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      consul:
+        condition: service_healthy
+    command: >
+      sh -c "python register_consul.py &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8002"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ai.rule=PathPrefix(`/ai`)"
+      - "traefik.http.routers.ai.entrypoints=web"
+      - "traefik.http.routers.ai.service=ai"
+      - "traefik.http.routers.ai.middlewares=ai-strip-prefix"
+      - "traefik.http.services.ai.loadbalancer.server.port=8002"
+      - "traefik.http.middlewares.ai-strip-prefix.stripprefix.prefixes=/ai"
+
+  # ===========================================
+  # AI Worker - Consumes RabbitMQ Queue
+  # ===========================================
+  ai_worker:
+    build:
+      context: ./ai_service
+      dockerfile: Dockerfile.worker
+    container_name: lsl_ai_worker
+    volumes:
+      - ./ai_service:/app
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASS=guest
+    networks:
+      - lsl_network
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    command: python ai_worker.py
+    restart: unless-stopped
+
+networks:
+  lsl_network:
+    driver: bridge
+
+volumes:
+  rabbitmq_data:
+  django_db_data:
+  ai_db_data:

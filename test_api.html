@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test - SignVue</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        .test-box {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        h1 { color: #7c3aed; }
+        button {
+            background: #7c3aed;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 8px 4px;
+        }
+        button:hover { background: #6d28d9; }
+        .log {
+            background: #1e293b;
+            color: #10b981;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .error { color: #ef4444; }
+        .success { color: #10b981; }
+        .warning { color: #f59e0b; }
+    </style>
+</head>
+<body>
+    <h1>🔧 API Diagnostic Tool</h1>
+    
+    <div class="test-box">
+        <h2>Test 1: Check AI Service (Port 8002)</h2>
+        <button onclick="testAIService()">Test AI Service</button>
+        <div id="ai-result" style="margin-top: 12px;"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>Test 2: Check API Service (Port 8001)</h2>
+        <button onclick="testAPIHealth()">Test API Health</button>
+        <div id="api-result" style="margin-top: 12px;"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>Test 3: Test Predict Endpoint</h2>
+        <p>This will send a test image to the predict endpoint</p>
+        <button onclick="testPredict()">Test Predict</button>
+        <div id="predict-result" style="margin-top: 12px;"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>Console Log</h2>
+        <div class="log" id="console-log"></div>
+        <button onclick="clearLog()" style="margin-top: 12px; background: #64748b;">Clear Log</button>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('console-log');
+            const timestamp = new Date().toLocaleTimeString();
+            let color = '#10b981';
+            if (type === 'error') color = '#ef4444';
+            if (type === 'warning') color = '#f59e0b';
+            
+            logDiv.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+
+        function clearLog() {
+            document.getElementById('console-log').innerHTML = '';
+        }
+
+        async function testAIService() {
+            const resultDiv = document.getElementById('ai-result');
+            resultDiv.innerHTML = '<p>Testing...</p>';
+            log('🔍 Testing AI Service on port 8002...');
+
+            try {
+                const startTime = Date.now();
+                const response = await fetch('http://localhost:8002/predict/', {
+                    method: 'GET'
+                });
+                
+                const duration = Date.now() - startTime;
+                log(`📡 AI Service responded in ${duration}ms with status ${response.status}`);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ AI Service is running! Model loaded: ${data.model_loaded}`, 'success');
+                    resultDiv.innerHTML = `
+                        <div style="background: #d1fae5; padding: 12px; border-radius: 8px;">
+                            <strong style="color: #10b981;">✅ AI Service is working!</strong><br>
+                            Model Loaded: ${data.model_loaded}<br>
+                            Device: ${data.device}<br>
+                            Classes: ${data.classes}
+                        </div>
+                    `;
+                } else {
+                    log(`❌ AI Service returned status ${response.status}`, 'error');
+                    resultDiv.innerHTML = `<p style="color: #ef4444;">❌ Status: ${response.status}</p>`;
+                }
+            } catch (error) {
+                log(`❌ AI Service error: ${error.message}`, 'error');
+                resultDiv.innerHTML = `<p style="color: #ef4444;">❌ Error: ${error.message}</p>`;
+            }
+        }
+
+        async function testAPIHealth() {
+            const resultDiv = document.getElementById('api-result');
+            resultDiv.innerHTML = '<p>Testing...</p>';
+            log('🔍 Testing API Service on port 8001...');
+
+            try {
+                const startTime = Date.now();
+                const response = await fetch('http://localhost:8001/', {
+                    method: 'GET'
+                });
+                
+                const duration = Date.now() - startTime;
+                log(`📡 API Service responded in ${duration}ms with status ${response.status}`);
+
+                if (response.ok) {
+                    log('✅ API Service is running!', 'success');
+                    resultDiv.innerHTML = `<div style="background: #d1fae5; padding: 12px; border-radius: 8px;"><strong style="color: #10b981;">✅ API Service is working!</strong></div>`;
+                } else {
+                    log(`⚠️ API Service returned status ${response.status}`, 'warning');
+                    resultDiv.innerHTML = `<p style="color: #f59e0b;">⚠️ Status: ${response.status}</p>`;
+                }
+            } catch (error) {
+                log(`❌ API Service error: ${error.message}`, 'error');
+                resultDiv.innerHTML = `<p style="color: #ef4444;">❌ Error: ${error.message}</p>`;
+            }
+        }
+
+        async function testPredict() {
+            const resultDiv = document.getElementById('predict-result');
+            resultDiv.innerHTML = '<p>Sending test prediction...</p>';
+            log('🔍 Testing predict endpoint...');
+
+            // Create a simple test image (1x1 pixel)
+            const canvas = document.createElement('canvas');
+            canvas.width = 160;
+            canvas.height = 160;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, 160, 160);
+            
+            const imageData = canvas.toDataURL('image/jpeg', 0.9);
+            log(`📸 Test image created (${imageData.length} bytes)`);
+
+            try {
+                const startTime = Date.now();
+                log('🚀 Sending POST request to /api/predict/...');
+
+                const response = await fetch('/api/predict/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ image: imageData })
+                });
+
+                const duration = Date.now() - startTime;
+                log(`📡 Response received in ${duration}ms - Status: ${response.status}`);
+
+                if (response.ok) {
+                    log('🔄 Parsing JSON response...');
+                    const data = await response.json();
+                    log(`✅ Prediction received: ${data.text} (${(data.confidence * 100).toFixed(1)}%)`, 'success');
+                    
+                    resultDiv.innerHTML = `
+                        <div style="background: #d1fae5; padding: 16px; border-radius: 8px;">
+                            <strong style="color: #10b981;">✅ Prediction successful!</strong><br><br>
+                            <strong>Text:</strong> ${data.text}<br>
+                            <strong>Confidence:</strong> ${(data.confidence * 100).toFixed(1)}%<br>
+                            <strong>User:</strong> ${data.user}<br><br>
+                            <strong>Full Response:</strong>
+                            <pre style="background: #1e293b; color: #10b981; padding: 12px; border-radius: 6px; margin-top: 8px; overflow-x: auto;">${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ Error response: ${errorText}`, 'error');
+                    resultDiv.innerHTML = `
+                        <div style="background: #fee2e2; padding: 16px; border-radius: 8px;">
+                            <strong style="color: #ef4444;">❌ Request failed</strong><br>
+                            Status: ${response.status}<br>
+                            Response: ${errorText}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                log(`❌ Fetch error: ${error.message}`, 'error');
+                log(`Error details: ${error.stack}`, 'error');
+                resultDiv.innerHTML = `
+                    <div style="background: #fee2e2; padding: 16px; border-radius: 8px;">
+                        <strong style="color: #ef4444;">❌ Fetch Error</strong><br>
+                        ${error.message}<br><br>
+                        <em>Check console for details</em>
+                    </div>
+                `;
+            }
+        }
+
+        // Auto-run tests on page load
+        window.addEventListener('load', () => {
+            log('🚀 Diagnostic tool loaded');
+            log('📝 Click buttons to test different endpoints');
+        });
+    </script>
+</body>
+</html>

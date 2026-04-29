@@ -1,0 +1,106 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignVue</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
+<body>
+
+{% block navbar %}
+<nav class="navbar">
+    <div class="container navbar-inner">
+        <a href="/auth/" class="logo">SignVue</a>
+
+        <div class="nav-links">
+            <a href="/auth/">Home</a>
+            <a href="/auth/camera-redirect/">Camera</a>
+            <a href="/auth/history-redirect/">History</a>
+        </div>
+
+        <div class="nav-auth">
+            {% if user.is_authenticated %}
+                <div class="user-dropdown">
+                    <button class="user-btn" onclick="toggleUserMenu()">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="20" height="20">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+                        </svg>
+                        <span>{{ user.get_full_name|default:user.username }}</span>
+                    </button>
+                    <div class="user-menu" id="userMenu">
+                        <div class="user-menu-header">
+                            <div class="user-avatar">{{ user.first_name|first|default:user.username|first|upper }}</div>
+                            <div class="user-info">
+                                <div class="user-name">{{ user.get_full_name|default:"User" }}</div>
+                                <div class="user-email">{{ user.email|default:"No email" }}</div>
+                            </div>
+                        </div>
+                        <div class="user-menu-body">
+                            <div class="user-detail-row">
+                                <span class="user-detail-label">Username:</span>
+                                <span class="user-detail-value">{{ user.username }}</span>
+                            </div>
+                            <div class="user-detail-row">
+                                <span class="user-detail-label">First Name:</span>
+                                <span class="user-detail-value">{{ user.first_name|default:"-" }}</span>
+                            </div>
+                            <div class="user-detail-row">
+                                <span class="user-detail-label">Last Name:</span>
+                                <span class="user-detail-value">{{ user.last_name|default:"-" }}</span>
+                            </div>
+                            <div class="user-detail-row">
+                                <span class="user-detail-label">Email:</span>
+                                <span class="user-detail-value">{{ user.email|default:"-" }}</span>
+                            </div>
+                        </div>
+                        <div class="user-menu-footer">
+                            <a href="/auth/logout/" class="btn-logout">Log Out</a>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <a href="/auth/login/" class="nav-link-login">Log In</a>
+                <a href="/auth/register/" class="btn btn-dark btn-sm">Sign up</a>
+            {% endif %}
+        </div>
+
+        <button class="menu-toggle" aria-label="Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+    </div>
+</nav>
+{% endblock %}
+
+<main>
+    {% block content %}
+    {% endblock %}
+</main>
+
+{% block footer %}
+<footer class="footer">
+    <div class="container">
+        &copy; SignVue. Built for seamless gesture-to-text communication.
+    </div>
+</footer>
+{% endblock %}
+
+<script src="{% static 'js/main.js' %}"></script>
+
+{% if user.is_authenticated and request.session.jwt_access_token %}
+<!-- JWT token stored by Django template - linter errors are false positives -->
+<script>
+try {
+  sessionStorage.setItem('jwt_access_token', '{{ request.session.jwt_access_token }}');
+} catch(e) {
+  console.warn('Could not store JWT token');
+}
+</script>
+{% endif %}
+
+</body>
+</html>
