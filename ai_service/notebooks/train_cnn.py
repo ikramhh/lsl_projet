@@ -3,11 +3,11 @@ Entraînement du modèle CNN sur le dataset ASL Alphabet complet
 MobileNetV2 avec Transfer Learning
 """
 import torch
+import matplotlib.pyplot as plt
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms, models
-import matplotlib.pyplot as plt
 import numpy as np
 import os
 from tqdm import tqdm

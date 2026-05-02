@@ -3,6 +3,7 @@ from django.views import View
 from django.shortcuts import get_object_or_404, render
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
 import json
 import traceback
 from rest_framework import viewsets
@@ -16,6 +17,22 @@ from .serializers import TranslationSerializer, HistorySerializer, UserSerialize
 from .permissions import IsOwnerOrAdmin, IsAdminUser, IsOwner
 from .rabbitmq import send_to_queue
 import random
+
+
+def health_check(request):
+    """
+    Health check endpoint pour Consul
+    """
+    return JsonResponse({
+        "status": "healthy",
+        "service": "api-django",
+        "timestamp": timezone.now().isoformat()
+    })
+
+
+def home(request):
+    """Home page"""
+    return render(request, "ui/home.html")
 
 # Prediction history for consensus (in-memory cache)
 # Format: {user_id: [{'label': 'A', 'confidence': 0.9, 'timestamp': 123456}]}

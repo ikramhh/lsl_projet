@@ -5,6 +5,7 @@ import traceback
 from django.http import JsonResponse
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
 import torch
 
 # Import ML utilities
@@ -14,6 +15,18 @@ from core.ml import load_model, process_base64_image, ASL_CLASSES
 current_model = None
 device = 'cpu'
 active_model_type = 'mobilenetv2'
+
+def health_check(request):
+    """
+    Health check endpoint pour Consul
+    """
+    return JsonResponse({
+        "status": "healthy",
+        "service": "ai-service",
+        "model_loaded": current_model is not None,
+        "device": device,
+        "timestamp": timezone.now().isoformat()
+    })
 
 def load_ai_model():
     """

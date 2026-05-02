@@ -7,6 +7,11 @@ urlpatterns = [
     # HOME
     # =========================
     path('', views.home),
+    
+    # =========================
+    # HEALTH CHECK (pour Consul)
+    # =========================
+    path('health/', views.health_check),
 
     # =========================
     # TRANSLATIONS API

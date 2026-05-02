@@ -82,7 +82,7 @@ services:
       - CONSUL_SERVICE_NAME=django-api
       - SERVICE_PORT=8000
       - SERVICE_ADDRESS=lsl_django
-      - HEALTH_CHECK_URL=/auth/
+      - HEALTH_CHECK_URL=/
     networks:
       - lsl_network
     depends_on:
